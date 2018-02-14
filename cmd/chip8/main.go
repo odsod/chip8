@@ -64,7 +64,9 @@ func Hz(x int64) time.Duration {
 	return time.Second / time.Duration(x)
 }
 
-func randomUint8() uint8 {
+type Random struct{}
+
+func (r Random) Next() uint8 {
 	return uint8(rand.Uint32())
 }
 
@@ -131,7 +133,7 @@ func main() {
 		panic(err)
 	}
 
-	vm := chip8.New(rom, randomUint8)
+	vm := chip8.New(rom, Random{})
 
 	var keyMap KeyMap
 	if *isDvorak {

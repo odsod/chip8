@@ -4,6 +4,10 @@ import (
 	"fmt"
 )
 
+type Random interface {
+	Next() uint8
+}
+
 type VM struct {
 	// SP is the stack pointer
 	SP uint8
@@ -39,7 +43,7 @@ type VM struct {
 	WaitingForKey *uint8
 
 	// random provides a random byte value
-	random func() uint8
+	random Random
 }
 
 const (
@@ -67,10 +71,8 @@ var digitSprites = []uint8{
 	0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 }
 
-func New(rom []uint8, random func() uint8) *VM {
-	vm := VM{}
-	vm.random = random
-	vm.PC = romStartAddress
+func New(rom []uint8, random Random) *VM {
+	vm := VM{random: random, PC: romStartAddress}
 	copy(vm.Memory[0:len(digitSprites)], digitSprites)
 	bytesCopied := copy(vm.Memory[romStartAddress:romStartAddress+len(rom)], rom)
 	if bytesCopied < len(rom) {
@@ -715,7 +717,7 @@ func (op EncodedOp) decodeRNDVx() RNDVx {
 }
 
 func (op RNDVx) execute(vm *VM) {
-	vm.V[op.x] = vm.random() & op.kk
+	vm.V[op.x] = vm.random.Next() & op.kk
 }
 
 /*
