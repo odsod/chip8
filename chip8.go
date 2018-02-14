@@ -232,6 +232,8 @@ func (op EncodedOp) decode() Op {
 			return op.decodeLDBVx()
 		case 0x55:
 			return op.decodeLDIVx()
+		case 0x65:
+			return op.decodeLDVxI()
 		}
 	}
 	panic(fmt.Sprintf("Unsupported op: %#X", op))
@@ -987,6 +989,10 @@ V0 through Vx.
 */
 type LDVxI struct {
 	x uint8
+}
+
+func (op EncodedOp) decodeLDVxI() LDVxI {
+	return LDVxI{op.x()}
 }
 
 func (op LDVxI) execute(vm *VM) {
