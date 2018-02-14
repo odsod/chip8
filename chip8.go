@@ -754,6 +754,9 @@ func (op DRWVxVy) execute(vm *VM) {
 	sprite := vm.Memory[vm.I : vm.I+uint16(op.n)]
 	for yi, spriteRow := range sprite {
 		y := y0 + uint8(yi)
+		if y >= uint8(len(vm.VideoMemory)) {
+			break
+		}
 		oldScanLine := vm.VideoMemory[y]
 		newScanLine := oldScanLine ^ expandSpriteRowToScanLine(spriteRow, x0)
 		vm.VideoMemory[y] = newScanLine
