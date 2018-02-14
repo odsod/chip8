@@ -224,6 +224,8 @@ func (op EncodedOp) decode() Op {
 			return op.decodeLDDTVx()
 		case 0x18:
 			return op.decodeLDSTVx()
+		case 0x1E:
+			return op.decodeADDIVx()
 		case 0x29:
 			return op.decodeLDFVx()
 		case 0x33:
