@@ -43,7 +43,8 @@ type VM struct {
 }
 
 const (
-	digitStartAddress = 0
+	romStartAddress   = 0x200
+	digitStartAddress = 0x000
 	digitSpriteSize   = 5
 )
 
@@ -66,11 +67,12 @@ var digitSprites = []uint8{
 	0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 }
 
-func New(random func() uint8) *VM {
+func New(rom []uint8, random func() uint8) *VM {
 	vm := VM{}
 	vm.random = random
-	vm.PC = 0x200
+	vm.PC = romStartAddress
 	copy(vm.Memory[0:len(digitSprites)], digitSprites)
+	copy(vm.Memory[romStartAddress:romStartAddress+len(rom)], rom)
 	return &vm
 }
 

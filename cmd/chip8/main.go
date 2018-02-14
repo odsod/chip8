@@ -117,73 +117,10 @@ func main() {
 		panic(err)
 	}
 	defer termbox.Close()
-	vm := chip8.New(randomUint8)
-	keyDownChannel, killChannel := readTermboxInput(Dvorak)
-	keyDownFn, keyUpFn, keyUpChannel := simulateKeyUpEvents(vm, 200*time.Millisecond)
-	program := []uint8{
-		0x00, 0xE0, // 00E0: CLS
-		0x60, 0x00, // 6xkk: LD Vx, kk
-		0xF0, 0x29, // Fx29: LD F, Vx
-		0xD1, 0x25, // Dxyn: DRW Vx, Vy, n
-		0xFF, 0x0A, // Fx0A: LD Vx, K
-
-		0x00, 0xE0, // 00E0: CLS
-		0x60, 0x01, // 6xkk: LD Vx, kk
-		0xF0, 0x29, // Fx29: LD F, Vx
-		0xD1, 0x25, // Dxyn: DRW Vx, Vy, n
-		0xFF, 0x0A, // Fx0A: LD Vx, K
-
-		0x00, 0xE0, // 00E0: CLS
-		0x60, 0x02, // 6xkk: LD Vx, kk
-		0xF0, 0x29, // Fx29: LD F, Vx
-		0xD1, 0x25, // Dxyn: DRW Vx, Vy, n
-		0xFF, 0x0A, // Fx0A: LD Vx, K
-
-		0x00, 0xE0, // 00E0: CLS
-		0x60, 0x03, // 6xkk: LD Vx, kk
-		0xF0, 0x29, // Fx29: LD F, Vx
-		0xD1, 0x25, // Dxyn: DRW Vx, Vy, n
-		0xFF, 0x0A, // Fx0A: LD Vx, K
-
-		0x00, 0xE0, // 00E0: CLS
-		0x60, 0x04, // 6xkk: LD Vx, kk
-		0xF0, 0x29, // Fx29: LD F, Vx
-		0xD1, 0x25, // Dxyn: DRW Vx, Vy, n
-		0xFF, 0x0A, // Fx0A: LD Vx, K
-
-		0x00, 0xE0, // 00E0: CLS
-		0x60, 0x05, // 6xkk: LD Vx, kk
-		0xF0, 0x29, // Fx29: LD F, Vx
-		0xD1, 0x25, // Dxyn: DRW Vx, Vy, n
-		0xFF, 0x0A, // Fx0A: LD Vx, K
-
-		0x00, 0xE0, // 00E0: CLS
-		0x60, 0x06, // 6xkk: LD Vx, kk
-		0xF0, 0x29, // Fx29: LD F, Vx
-		0xD1, 0x25, // Dxyn: DRW Vx, Vy, n
-		0xFF, 0x0A, // Fx0A: LD Vx, K
-
-		0x00, 0xE0, // 00E0: CLS
-		0x60, 0x07, // 6xkk: LD Vx, kk
-		0xF0, 0x29, // Fx29: LD F, Vx
-		0xD1, 0x25, // Dxyn: DRW Vx, Vy, n
-		0xFF, 0x0A, // Fx0A: LD Vx, K
-
-		0x00, 0xE0, // 00E0: CLS
-		0x60, 0x08, // 6xkk: LD Vx, kk
-		0xF0, 0x29, // Fx29: LD F, Vx
-		0xD1, 0x25, // Dxyn: DRW Vx, Vy, n
-		0xFF, 0x0A, // Fx0A: LD Vx, K
-
-		0x00, 0xE0, // 00E0: CLS
-		0x60, 0x09, // 6xkk: LD Vx, kk
-		0xF0, 0x29, // Fx29: LD F, Vx
-		0xD1, 0x25, // Dxyn: DRW Vx, Vy, n
-		0xFF, 0x0A, // Fx0A: LD Vx, K
-
-		0x12, 0x00, // 1nnn: JP nnn
 	}
-	copy(vm.Memory[0x200:0x200+len(program)], program)
+	vm := chip8.New(rom, randomUint8)
+	keyDownChannel, killChannel := readTermboxInput(keyMap)
+	keyDownFn, keyUpFn, keyUpChannel := simulateKeyUpEvents(vm, 100*time.Millisecond)
 	cpuTicks := time.NewTicker(Hz(700))
 	timerTicks := time.NewTicker(Hz(60))
 	videoRefreshes := time.NewTicker(Hz(30))
