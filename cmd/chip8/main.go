@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"io/ioutil"
 	"math/rand"
 	"time"
 
@@ -114,15 +116,32 @@ func renderTermbox(vm *chip8.VM) {
 }
 
 func main() {
+	romFile := flag.String("rom", "roms/TETRIS", "The ROM to load")
+	isDvorak := flag.Bool("dvorak", false, "Use Dvorak key map")
+	flag.Parse()
+
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
 	}
 	defer termbox.Close()
+
+	rom, err := ioutil.ReadFile(*romFile)
+	if err != nil {
+		panic(err)
 	}
+
 	vm := chip8.New(rom, randomUint8)
+
+	var keyMap KeyMap
+	if *isDvorak {
+		keyMap = Dvorak
+	} else {
+		keyMap = QWER
+	}
 	keyDownChannel, killChannel := readTermboxInput(keyMap)
 	keyDownFn, keyUpFn, keyUpChannel := simulateKeyUpEvents(vm, 100*time.Millisecond)
+
 	cpuTicks := time.NewTicker(Hz(700))
 	timerTicks := time.NewTicker(Hz(60))
 	videoRefreshes := time.NewTicker(Hz(30))
