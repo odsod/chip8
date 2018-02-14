@@ -271,8 +271,8 @@ func (op EncodedOp) decodeRET() RET {
 }
 
 func (op RET) execute(vm *VM) {
-	vm.PC = vm.Stack[vm.SP]
 	vm.SP--
+	vm.PC = vm.Stack[vm.SP]
 }
 
 /*
