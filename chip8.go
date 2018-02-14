@@ -120,10 +120,6 @@ func (vm *VM) fetch() EncodedOp {
 	return op
 }
 
-type Op interface {
-	execute(*VM)
-}
-
 type EncodedOp uint16
 
 // .nnn
@@ -169,7 +165,10 @@ func (op EncodedOp) decode() Op {
 	case 0x4:
 		return op.decodeSNEVx()
 	case 0x5:
-		return op.decodeSEVxVy()
+		switch op & 0x000F {
+		case 0x0:
+			return op.decodeSEVxVy()
+		}
 	case 0x6:
 		return op.decodeLDVx()
 	case 0x7:
@@ -196,7 +195,10 @@ func (op EncodedOp) decode() Op {
 			return op.decodeSHLVx()
 		}
 	case 0x9:
-		return op.decodeSNEVxVy()
+		switch op & 0x000F {
+		case 0x0:
+			return op.decodeSNEVxVy()
+		}
 	case 0xA:
 		return op.decodeLDI()
 	case 0xB:
@@ -235,6 +237,10 @@ func (op EncodedOp) decode() Op {
 		}
 	}
 	panic(fmt.Sprintf("Unsupported op: %#X", op))
+}
+
+type Op interface {
+	execute(*VM)
 }
 
 /*
