@@ -76,14 +76,6 @@ func New(rom []uint8, random func() uint8) *VM {
 	return &vm
 }
 
-func (vm *VM) Step() {
-	if vm.K != nil {
-		// execution is suspended until next keyboard input
-		return
-	}
-	vm.fetch().decode().execute(vm)
-}
-
 func (vm *VM) SetKeyDown(key uint8) {
 	if key > 0xff {
 		panic(fmt.Sprintf("Unsupported key: %#x", key))
@@ -112,12 +104,16 @@ func (vm *VM) TickTimers() {
 	}
 }
 
-func (vm *VM) readUint16(addr uint16) uint16 {
-	return (uint16(vm.Memory[addr]) << 8) | uint16(vm.Memory[addr+1])
+func (vm *VM) Step() {
+	if vm.K != nil {
+		// execution is suspended until next keyboard input
+		return
+	}
+	vm.fetch().decode().execute(vm)
 }
 
 func (vm *VM) fetch() EncodedOp {
-	op := EncodedOp(vm.readUint16(vm.PC))
+	op := EncodedOp(uint16(vm.Memory[vm.PC])<<8 | uint16(vm.Memory[vm.PC+1]))
 	vm.PC += 2
 	return op
 }
