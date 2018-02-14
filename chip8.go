@@ -81,9 +81,7 @@ func (vm *VM) Step() {
 		// execution is suspended until next keyboard input
 		return
 	}
-	encodedOp := vm.fetch()
-	op := encodedOp.decode()
-	op.execute(vm)
+	vm.fetch().decode().execute(vm)
 }
 
 func (vm *VM) SetKeyDown(key uint8) {
