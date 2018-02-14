@@ -72,7 +72,10 @@ func New(rom []uint8, random func() uint8) *VM {
 	vm.random = random
 	vm.PC = romStartAddress
 	copy(vm.Memory[0:len(digitSprites)], digitSprites)
-	copy(vm.Memory[romStartAddress:romStartAddress+len(rom)], rom)
+	bytesCopied := copy(vm.Memory[romStartAddress:romStartAddress+len(rom)], rom)
+	if bytesCopied < len(rom) {
+		panic(fmt.Sprintf("Not enough memory to fit ROM of size %d bytes", len(rom)))
+	}
 	return &vm
 }
 
