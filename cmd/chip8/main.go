@@ -66,7 +66,9 @@ func randomUint8() uint8 {
 	return uint8(rand.Uint32())
 }
 
-func simulateKeyUpEvents(vm *chip8.VM, delay time.Duration) (keyDownFn, keyUpFn func(uint8), keyUpChannel chan uint8) {
+func simulateKeyUpEvents(vm *chip8.VM, delay time.Duration) (
+	keyDownFn, keyUpFn func(uint8), keyUpChannel chan uint8,
+) {
 	keyUpChannel = make(chan uint8)
 	var keyUpTimers [16]*time.Timer
 	for key := 0x0; key <= 0xf; key++ {
