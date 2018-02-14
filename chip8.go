@@ -29,14 +29,14 @@ type VM struct {
 	// Stack holds up to 16 memory locations
 	Stack [16]uint16
 
-	// Keys are a list of flags (0x0 - 0xF) signfying if a key is held down or not
-	Keys [16]bool
-
 	// VideoMemory represents the 64x32 pixel screen as 64-bit scan lines
 	VideoMemory [32]uint64
 
-	// K points to the register waiting for a keypress
-	K *uint8
+	// Keys are a list of flags (0x0 - 0xF) signfying if a key is held down or not
+	Keys [16]bool
+
+	// WaitingForKey points to the register waiting for a keypress
+	WaitingForKey *uint8
 
 	// random provides a random byte value
 	random func() uint8
@@ -81,10 +81,9 @@ func (vm *VM) SetKeyDown(key uint8) {
 		panic(fmt.Sprintf("Unsupported key: %#x", key))
 	}
 	vm.Keys[key] = true
-	if vm.K != nil {
-		// load the
-		*vm.K = key
-		vm.K = nil
+	if vm.WaitingForKey != nil {
+		*vm.WaitingForKey = key
+		vm.WaitingForKey = nil
 	}
 }
 
@@ -105,7 +104,7 @@ func (vm *VM) TickTimers() {
 }
 
 func (vm *VM) Step() {
-	if vm.K != nil {
+	if vm.WaitingForKey != nil {
 		// execution is suspended until next keyboard input
 		return
 	}
@@ -847,7 +846,7 @@ func (op EncodedOp) decodeLDVxK() LDVxK {
 }
 
 func (op LDVxK) execute(vm *VM) {
-	vm.K = &vm.V[op.x]
+	vm.WaitingForKey = &vm.V[op.x]
 }
 
 /*
