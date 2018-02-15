@@ -39,8 +39,11 @@ type VM struct {
 	// Keys are a list of flags (0x0 - 0xF) signfying if a key is held down or not
 	Keys [16]bool
 
-	// WaitingForKey points to the register waiting for a keypress
-	WaitingForKey *uint8
+	// IsWaitingForKeyPress is true when the VM is waiting for a key to be pressed
+	IsWaitingForKeyPress bool
+
+	// K is the register (0x0 - 0xF) waiting for a key to be pressed
+	K uint8
 
 	// random provides a random byte value
 	random Random
@@ -86,9 +89,9 @@ func (vm *VM) SetKeyDown(key uint8) {
 		panic(fmt.Sprintf("Unsupported key: %#x", key))
 	}
 	vm.Keys[key] = true
-	if vm.WaitingForKey != nil {
-		*vm.WaitingForKey = key
-		vm.WaitingForKey = nil
+	if vm.IsWaitingForKeyPress {
+		vm.V[vm.K] = key
+		vm.IsWaitingForKeyPress = false
 	}
 }
 
@@ -109,8 +112,7 @@ func (vm *VM) TickTimers() {
 }
 
 func (vm *VM) Step() {
-	if vm.WaitingForKey != nil {
-		// execution is suspended until next keyboard input
+	if vm.IsWaitingForKeyPress {
 		return
 	}
 	vm.fetch().decode().execute(vm)
@@ -857,7 +859,8 @@ func (op EncodedOp) decodeLDVxK() LDVxK {
 }
 
 func (op LDVxK) execute(vm *VM) {
-	vm.WaitingForKey = &vm.V[op.x]
+	vm.IsWaitingForKeyPress = true
+	vm.K = op.x
 }
 
 /*
