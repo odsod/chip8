@@ -938,6 +938,9 @@ func (op EncodedOp) decodeLDFVx() LDFVx {
 }
 
 func (op LDFVx) execute(vm *VM) {
+	if op.x > 0xF {
+		panic(fmt.Sprintf("LDFVx unsupported digit %#x", op.x))
+	}
 	vm.I = digitStartAddress + digitSpriteSize*uint16(vm.V[op.x])
 }
 
