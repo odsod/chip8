@@ -100,3 +100,28 @@ func TestDecodeOps(t *testing.T) {
 		}
 	}
 }
+
+func TestBCD(t *testing.T) {
+	for _, testCase := range []struct {
+		n, hundreds, tens, ones uint8
+	}{
+		{0, 0, 0, 0},
+		{1, 0, 0, 1},
+		{10, 0, 1, 0},
+		{11, 0, 1, 1},
+		{100, 1, 0, 0},
+		{102, 1, 0, 2},
+		{123, 1, 2, 3},
+		{200, 2, 0, 0},
+		{202, 2, 0, 2},
+		{242, 2, 4, 2},
+	} {
+		hundreds, tens, ones := bcd(testCase.n)
+		if hundreds != testCase.hundreds || tens != testCase.tens || ones != testCase.ones {
+			t.Errorf(
+				"bcd(%d) Expected: %d %d %d Actual: %d %d %d",
+				testCase.n, testCase.hundreds, testCase.tens, testCase.ones,
+				hundreds, tens, ones)
+		}
+	}
+}
