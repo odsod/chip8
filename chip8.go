@@ -631,7 +631,7 @@ func (op EncodedOp) decodeSHLVx() SHLVx {
 }
 
 func (op SHLVx) execute(vm *VM) {
-	if vm.V[op.x]&0x80 == 1 {
+	if vm.V[op.x]&0x80 > 0 {
 		vm.V[0xF] = 1
 	} else {
 		vm.V[0xF] = 0
