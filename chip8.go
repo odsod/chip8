@@ -963,7 +963,7 @@ func (op EncodedOp) decodeLDBVx() LDBVx {
 
 func bcd(n uint8) (hundreds, tens, ones uint8) {
 	hundreds = n / 100
-	tens = (n - hundreds*100) / 10
+	tens = (n / 10) % 10
 	ones = n % 10
 	return
 }
