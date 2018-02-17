@@ -516,6 +516,137 @@ func TestOps(t *testing.T) {
 			instruction 8xy3 for more information on XOR, and section 2.4, Display,
 			for more information on the Chip-8 screen and sprites.
 		*/
+		{
+			msg: "no collision, no clipping",
+			before: VM{
+				I: 0x5,
+				V: [16]uint8{0xA: 0x4, 0xB: 0x1},
+				Memory: [4096]uint8{
+					0x5: 0xFF,
+					0x6: 0x0F,
+					0x7: 0xFF,
+				},
+				VideoMemory: [32]uint64{
+					0x1: 0x0000000000000000,
+					0x2: 0x0000000000000000,
+					0x3: 0x0000000000000000,
+				},
+			},
+			op: DRWVxVy{x: 0xA, y: 0xB, n: 3},
+			after: VM{
+				I: 0x5,
+				V: [16]uint8{0xA: 0x4, 0xB: 0x1, 0xF: 0},
+				Memory: [4096]uint8{
+					0x5: 0xFF,
+					0x6: 0x0F,
+					0x7: 0xFF,
+				},
+				VideoMemory: [32]uint64{
+					0x1: 0x0FF0000000000000,
+					0x2: 0x00F0000000000000,
+					0x3: 0x0FF0000000000000,
+				},
+			},
+		},
+
+		{
+			msg: "collision, no clipping",
+			before: VM{
+				I: 0x5,
+				V: [16]uint8{0xA: 0x4, 0xB: 0x1},
+				Memory: [4096]uint8{
+					0x5: 0xFF,
+					0x6: 0x0F,
+					0x7: 0xFF,
+				},
+				VideoMemory: [32]uint64{
+					0x1: 0x0000000000000000,
+					0x2: 0x00F0000000000000,
+					0x3: 0x0000000000000000,
+				},
+			},
+			op: DRWVxVy{x: 0xA, y: 0xB, n: 3},
+			after: VM{
+				I: 0x5,
+				V: [16]uint8{0xA: 0x4, 0xB: 0x1, 0xF: 1},
+				Memory: [4096]uint8{
+					0x5: 0xFF,
+					0x6: 0x0F,
+					0x7: 0xFF,
+				},
+				VideoMemory: [32]uint64{
+					0x1: 0x0FF0000000000000,
+					0x2: 0x0000000000000000,
+					0x3: 0x0FF0000000000000,
+				},
+			},
+		},
+
+		{
+			msg: "no collision, clipping",
+			before: VM{
+				I: 0x5,
+				V: [16]uint8{0xA: 60, 0xB: 0x1},
+				Memory: [4096]uint8{
+					0x5: 0xFF,
+					0x6: 0x0F,
+					0x7: 0xFF,
+				},
+				VideoMemory: [32]uint64{
+					0x1: 0x0000000000000000,
+					0x2: 0x0000000000000000,
+					0x3: 0x0000000000000000,
+				},
+			},
+			op: DRWVxVy{x: 0xA, y: 0xB, n: 3},
+			after: VM{
+				I: 0x5,
+				V: [16]uint8{0xA: 60, 0xB: 0x1, 0xF: 0},
+				Memory: [4096]uint8{
+					0x5: 0xFF,
+					0x6: 0x0F,
+					0x7: 0xFF,
+				},
+				VideoMemory: [32]uint64{
+					0x1: 0x000000000000000F,
+					0x2: 0x0000000000000000,
+					0x3: 0x000000000000000F,
+				},
+			},
+		},
+
+		{
+			msg: "collision, clipping",
+			before: VM{
+				I: 0x5,
+				V: [16]uint8{0xA: 60, 0xB: 0x1},
+				Memory: [4096]uint8{
+					0x5: 0xFF,
+					0x6: 0x0F,
+					0x7: 0xFF,
+				},
+				VideoMemory: [32]uint64{
+					0x1: 0x000000000000000F,
+					0x2: 0x0000000000000000,
+					0x3: 0x0000000000000000,
+				},
+			},
+			op: DRWVxVy{x: 0xA, y: 0xB, n: 3},
+			after: VM{
+				I: 0x5,
+				V: [16]uint8{0xA: 60, 0xB: 0x1, 0xF: 1},
+				Memory: [4096]uint8{
+					0x5: 0xFF,
+					0x6: 0x0F,
+					0x7: 0xFF,
+				},
+				VideoMemory: [32]uint64{
+					0x1: 0x0000000000000000,
+					0x2: 0x0000000000000000,
+					0x3: 0x000000000000000F,
+				},
+			},
+		},
 
 		/*
 			Ex9E - SKP Vx
