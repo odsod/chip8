@@ -665,6 +665,18 @@ func TestOps(t *testing.T) {
 			The interpreter reads values from memory starting at location I into
 			registers V0 through Vx.
 		*/
+		{
+			before: VM{
+				I:      0x300,
+				Memory: [4096]uint8{0x300: 0x0, 0x301: 0x1, 0x302: 0x2, 0x303: 0x3},
+			},
+			op: LDVxI{x: 0x3},
+			after: VM{
+				I:      0x300,
+				Memory: [4096]uint8{0x300: 0x0, 0x301: 0x1, 0x302: 0x2, 0x303: 0x3},
+				V:      [16]uint8{0x0: 0x0, 0x1: 0x1, 0x2: 0x2, 0x3: 0x3},
+			},
+		},
 	} {
 		actualAfter := testCase.before
 		testCase.op.execute(&actualAfter)
