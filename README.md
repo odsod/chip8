@@ -4,6 +4,12 @@ Go implementation of the [CHIP-8 VM][chip8] according to [Cowgod's Technical Ref
 
 Roms downloaded from [Zophar's Domain][zophar].
 
+## Dependencies
+
+~~~
+github.com/nsf/termbox-go
+~~~
+
 ## Example usage
 
 ~~~
