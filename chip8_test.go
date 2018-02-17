@@ -640,6 +640,15 @@ func TestOps(t *testing.T) {
 			digit in memory at location in I, the tens digit at location I+1, and
 			the ones digit at location I+2.
 		*/
+		{
+			before: VM{I: 0x300, V: [16]uint8{0xA: 123}},
+			op:     LDBVx{x: 0xA},
+			after: VM{
+				I:      0x300,
+				V:      [16]uint8{0xA: 123},
+				Memory: [4096]uint8{0x300: 1, 0x301: 2, 0x302: 3},
+			},
+		},
 
 		/*
 			Fx55 - LD [I], Vx
