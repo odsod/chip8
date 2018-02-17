@@ -10,15 +10,15 @@ import (
 	"github.com/odsod/chip8"
 )
 
-type KeyMap = map[rune]uint8
-
 /*
-|1|2|3|4| -> |1|2|3|C|
-|'|,|.|p| -> |4|5|6|D|
-|a|o|e|u| -> |7|8|9|E|
-|;|q|j|k| -> |A|0|B|F|
+Dvorak keyboard layout mapping to CHIP-8 keys.
+
+	|1|2|3|4| -> |1|2|3|C|
+	|'|,|.|p| -> |4|5|6|D|
+	|a|o|e|u| -> |7|8|9|E|
+	|;|q|j|k| -> |A|0|B|F|
 */
-var Dvorak KeyMap = KeyMap{
+var Dvorak = map[rune]uint8{
 	'1': 0x1, '2': 0x2, '3': 0x3, '4': 0xC,
 	'\'': 0x4, ',': 0x5, '.': 0x6, 'p': 0xD,
 	'a': 0x7, 'o': 0x8, 'e': 0x9, 'u': 0xE,
@@ -26,12 +26,14 @@ var Dvorak KeyMap = KeyMap{
 }
 
 /*
-|1|2|3|4| -> |1|2|3|C|
-|q|w|e|r| -> |4|5|6|D|
-|a|s|d|f| -> |7|8|9|E|
-|z|x|c|v| -> |A|0|B|F|
+QWER(TY|TZ) keyboard layout mapping to CHIP-8 keys.
+
+	|1|2|3|4| -> |1|2|3|C|
+	|q|w|e|r| -> |4|5|6|D|
+	|a|s|d|f| -> |7|8|9|E|
+	|z|x|c|v| -> |A|0|B|F|
 */
-var QWER KeyMap = KeyMap{
+var QWER = map[rune]uint8{
 	'1': 0x1, '2': 0x2, '3': 0x3, '4': 0xC,
 	'q': 0x4, 'w': 0x5, 'e': 0x6, 'r': 0xD,
 	'a': 0x7, 's': 0x8, 'd': 0x9, 'f': 0xE,
@@ -65,7 +67,7 @@ func renderToTermbox(vm *chip8.VM) {
 	termbox.Flush()
 }
 
-func readInputFromTermbox(keyMap KeyMap) (
+func readInputFromTermbox(keyMap map[rune]uint8) (
 	keyChannel chan uint8, killChannel chan bool,
 ) {
 	keyChannel = make(chan uint8)
@@ -126,11 +128,9 @@ func main() {
 
 	vm := chip8.New(rom, Random{})
 
-	var keyMap KeyMap
+	keyMap := QWER
 	if *isDvorak {
 		keyMap = Dvorak
-	} else {
-		keyMap = QWER
 	}
 	keyDownChannel, killChannel := readInputFromTermbox(keyMap)
 	keyDownFn, keyUpChannel := simulateKeyUpEvents(vm, 100*time.Millisecond)
