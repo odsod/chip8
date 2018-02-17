@@ -1011,7 +1011,7 @@ func (op EncodedOp) decodeLDVxI() LDVxI {
 }
 
 func (op LDVxI) execute(vm *VM) {
-	for i := 0; i < int(op.x); i++ {
+	for i := 0; i <= int(op.x); i++ {
 		vm.V[i] = vm.Memory[vm.I+uint16(i)]
 	}
 }
