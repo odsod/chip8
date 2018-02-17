@@ -38,7 +38,36 @@ var QWER KeyMap = KeyMap{
 	'z': 0xA, 'x': 0x0, 'c': 0xB, 'v': 0xF,
 }
 
-func readTermboxInput(keyMap KeyMap) (keyChannel chan uint8, killChannel chan bool) {
+func Hz(x int64) time.Duration {
+	return time.Second / time.Duration(x)
+}
+
+type Random struct{}
+
+func (r Random) Next() uint8 {
+	return uint8(rand.Uint32())
+}
+
+func renderToTermbox(vm *chip8.VM) {
+	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+	for y, scanLine := range vm.VideoMemory {
+		for x := 0; x < 64; x++ {
+			pixel := scanLine&(0x8000000000000000>>uint(x)) > 0
+			var bg termbox.Attribute
+			if pixel {
+				bg = termbox.ColorWhite
+			} else {
+				bg = termbox.ColorDefault
+			}
+			termbox.SetCell(x, y, ' ', termbox.ColorDefault, bg)
+		}
+	}
+	termbox.Flush()
+}
+
+func readInputFromTermbox(keyMap KeyMap) (
+	keyChannel chan uint8, killChannel chan bool,
+) {
 	keyChannel = make(chan uint8)
 	killChannel = make(chan bool)
 	go func() {
@@ -60,18 +89,8 @@ func readTermboxInput(keyMap KeyMap) (keyChannel chan uint8, killChannel chan bo
 	return
 }
 
-func Hz(x int64) time.Duration {
-	return time.Second / time.Duration(x)
-}
-
-type Random struct{}
-
-func (r Random) Next() uint8 {
-	return uint8(rand.Uint32())
-}
-
 func simulateKeyUpEvents(vm *chip8.VM, delay time.Duration) (
-	keyDownFn, keyUpFn func(uint8), keyUpChannel chan uint8,
+	keyDownFn func(uint8), keyUpChannel chan uint8,
 ) {
 	keyUpChannel = make(chan uint8)
 	var keyUpTimers [16]*time.Timer
@@ -86,35 +105,7 @@ func simulateKeyUpEvents(vm *chip8.VM, delay time.Duration) (
 		keyUpTimers[key].Reset(delay)
 		vm.SetKeyDown(key)
 	}
-	keyUpFn = func(key uint8) {
-		vm.SetKeyUp(key)
-	}
 	return
-}
-
-func pixels(scanLine uint64) [64]bool {
-	var result [64]bool
-	var i uint
-	for i = 0; i < 64; i++ {
-		result[i] = scanLine&(0x8000000000000000>>i) > 0
-	}
-	return result
-}
-
-func renderTermbox(vm *chip8.VM) {
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-	for y, scanLine := range vm.VideoMemory {
-		for x, pixel := range pixels(scanLine) {
-			var bg termbox.Attribute
-			if pixel {
-				bg = termbox.ColorWhite
-			} else {
-				bg = termbox.ColorDefault
-			}
-			termbox.SetCell(x, y, ' ', termbox.ColorDefault, bg)
-		}
-	}
-	termbox.Flush()
 }
 
 func main() {
@@ -141,8 +132,8 @@ func main() {
 	} else {
 		keyMap = QWER
 	}
-	keyDownChannel, killChannel := readTermboxInput(keyMap)
-	keyDownFn, keyUpFn, keyUpChannel := simulateKeyUpEvents(vm, 100*time.Millisecond)
+	keyDownChannel, killChannel := readInputFromTermbox(keyMap)
+	keyDownFn, keyUpChannel := simulateKeyUpEvents(vm, 100*time.Millisecond)
 
 	cpuTicks := time.NewTicker(Hz(700))
 	timerTicks := time.NewTicker(Hz(60))
@@ -153,13 +144,13 @@ Loop:
 		case key := <-keyDownChannel:
 			keyDownFn(key)
 		case key := <-keyUpChannel:
-			keyUpFn(key)
+			vm.SetKeyUp(key)
 		case <-cpuTicks.C:
 			vm.Step()
 		case <-timerTicks.C:
 			vm.TickTimers()
 		case <-videoRefreshes.C:
-			renderTermbox(vm)
+			renderToTermbox(vm)
 		case <-killChannel:
 			break Loop
 		}
