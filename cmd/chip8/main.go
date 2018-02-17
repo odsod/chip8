@@ -40,7 +40,7 @@ var QWER = map[rune]uint8{
 	'z': 0xA, 'x': 0x0, 'c': 0xB, 'v': 0xF,
 }
 
-func Hz(x int64) time.Duration {
+func Hz(x int) time.Duration {
 	return time.Second / time.Duration(x)
 }
 
@@ -138,6 +138,9 @@ func simulateKeyUpEvents(vm *chip8.VM, delay time.Duration) (
 func main() {
 	romFile := flag.String("rom", "roms/TETRIS", "The ROM to load")
 	isDvorak := flag.Bool("dvorak", false, "Use Dvorak key map")
+	cpuFrequency := flag.Int("cpuFrequency", 500, "The CPU frequency (Hz)")
+	timerFrequency := flag.Int("timerFrequency", 60, "The timer frequency (Hz)")
+	frameRate := flag.Int("frameRate", 60, "The frame rate (Hz)")
 	flag.Parse()
 
 	err := termbox.Init()
@@ -160,9 +163,11 @@ func main() {
 	keyDownChannel, killChannel := readInputFromTermbox(keyMap)
 	keyDownFn, keyUpChannel := simulateKeyUpEvents(vm, 100*time.Millisecond)
 
-	cpuTicks := time.NewTicker(Hz(700))
-	timerTicks := time.NewTicker(Hz(60))
-	videoRefreshes := time.NewTicker(Hz(30))
+	startTime := time.Now()
+	timerCycles := 0
+	cpuCycles := 0
+	frames := 0
+
 Loop:
 	for {
 		select {
@@ -170,14 +175,24 @@ Loop:
 			keyDownFn(key)
 		case key := <-keyUpChannel:
 			vm.SetKeyUp(key)
-		case <-cpuTicks.C:
-			vm.Step()
-		case <-timerTicks.C:
-			vm.TickTimers()
-		case <-videoRefreshes.C:
-			render(*romFile, vm)
 		case <-killChannel:
 			break Loop
+		default:
+			// do nothing
 		}
+		runTime := time.Now().Sub(startTime)
+		for i := timerCycles; i < int(runTime/Hz(*timerFrequency)); i++ {
+			vm.TickTimers()
+			timerCycles++
+		}
+		for i := cpuCycles; i < int(runTime/Hz(*cpuFrequency)); i++ {
+			vm.Step()
+			cpuCycles++
+		}
+		for i := frames; i < int(runTime/Hz(*frameRate)); i++ {
+			render(*romFile, vm)
+			frames++
+		}
+		time.Sleep(10 * time.Millisecond)
 	}
 }
