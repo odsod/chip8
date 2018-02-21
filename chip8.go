@@ -2,10 +2,17 @@ package chip8
 
 import (
 	"fmt"
+	"math/rand"
 )
 
 type Random interface {
 	Next() uint8
+}
+
+type defaultRandom struct{}
+
+func (r defaultRandom) Next() uint8 {
+	return uint8(rand.Uint32())
 }
 
 type VM struct {
@@ -74,14 +81,18 @@ var digitSprites = []uint8{
 	0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 }
 
-func New(rom []uint8, random Random) *VM {
-	vm := VM{random: random, PC: romStartAddress}
+func New(rom []uint8) *VM {
+	vm := VM{random: defaultRandom{}, PC: romStartAddress}
 	copy(vm.Memory[0:len(digitSprites)], digitSprites)
 	bytesCopied := copy(vm.Memory[romStartAddress:romStartAddress+len(rom)], rom)
 	if bytesCopied < len(rom) {
 		panic(fmt.Sprintf("Not enough memory to fit ROM of size %d bytes", len(rom)))
 	}
 	return &vm
+}
+
+func (vm *VM) SetKeys(keys [16]bool) {
+	vm.Keys = keys
 }
 
 func (vm *VM) SetKeyDown(key uint8) {
