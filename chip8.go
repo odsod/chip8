@@ -5,6 +5,11 @@ import (
 	"math/rand"
 )
 
+const (
+	ScreenWidth  = 64
+	ScreenHeight = 32
+)
+
 type Random interface {
 	Next() uint8
 }
@@ -41,7 +46,7 @@ type VM struct {
 	Stack [16]uint16
 
 	// VideoMemory represents the 64x32 pixel screen as 64-bit scan lines
-	VideoMemory [32]uint64
+	VideoMemory [ScreenHeight]uint64
 
 	// Keys are a list of flags (0x0 - 0xF) signfying if a key is held down or not
 	Keys [16]bool
