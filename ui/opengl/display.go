@@ -10,15 +10,15 @@ import (
 )
 
 type display struct {
+	buffer        *image.RGBA
 	pixelFadeTime time.Duration
 	pixelLastLit  [chip8.ScreenWidth][chip8.ScreenHeight]time.Time
-	buffer        *image.RGBA
 }
 
 func newDisplay(pixelFadeTime time.Duration) *display {
 	return &display{
-		pixelFadeTime: pixelFadeTime,
 		buffer:        image.NewRGBA(image.Rect(0, 0, chip8.ScreenWidth, chip8.ScreenHeight)),
+		pixelFadeTime: pixelFadeTime,
 	}
 }
 
@@ -32,8 +32,8 @@ func pixelColor(now, lastLit time.Time, fade time.Duration) color.RGBA {
 	return color.RGBA{alpha, alpha, alpha, 255}
 }
 
-func (d *display) update(now time.Time, vm *chip8.VM) {
-	for y, scanLine := range vm.VideoMemory {
+func (d *display) update(now time.Time, videoMemory [chip8.ScreenHeight]uint64) {
+	for y, scanLine := range videoMemory {
 		for x := 0; x < 64; x++ {
 			pixel := scanLine&(0x8000000000000000>>uint(x)) > 0
 			if pixel {
