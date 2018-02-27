@@ -1,5 +1,9 @@
 # CHIP-8
 
+![chip8](https://raw.githubusercontent.com/odsod/chip8/gh-pages/chip8.gif)
+
+## What's this
+
 Go implementation of the [CHIP-8 VM][chip8] according to [Cowgod's Technical Reference][cowgod].
 
 Roms downloaded from [Zophar's Domain][zophar].
@@ -13,15 +17,19 @@ With ideas from:
 
 ~~~
 github.com/nsf/termbox-go
+github.com/go-gl/gl/v2.1/gl
+github.com/go-gl/glfw/v3.1/glfw
 ~~~
 
 ## Example usage
 
-~~~
+~~~sh
+# Terminal UI
 chip8 -rom roms/TETRIS
-~~~
 
-![chip8](https://raw.githubusercontent.com/odsod/chip8/gh-pages/chip8.gif)
+# OpenGL UI
+chip8-gl -rom roms/TETRIS
+~~~
 
 [chip8]: https://en.wikipedia.org/wiki/CHIP-8
 [cowgod]: http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
