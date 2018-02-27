@@ -1,7 +1,6 @@
 package opengl
 
 import (
-	"image"
 	"io/ioutil"
 	"runtime"
 	"time"
@@ -105,43 +104,44 @@ func (ui *UI) Run() {
 
 		gl.BindTexture(gl.TEXTURE_2D, texture)
 
-		setTexture(ui.display.buffer)
-		drawBuffer(window)
+		size := ui.display.buffer.Rect.Size()
+		gl.TexImage2D(
+			gl.TEXTURE_2D,
+			0,
+			gl.RGBA,
+			int32(size.X),
+			int32(size.Y),
+			0,
+			gl.RGBA,
+			gl.UNSIGNED_BYTE,
+			gl.Ptr(ui.display.buffer.Pix))
+
+		w, h := window.GetFramebufferSize()
+		s1 := float32(w) / chip8.ScreenWidth
+		s2 := float32(h) / chip8.ScreenHeight
+		f := float32(1)
+		var x, y float32
+		if s1 >= s2 {
+			x = f * s2 / s1
+			y = f
+		} else {
+			x = f
+			y = f * s1 / s2
+		}
+		gl.Begin(gl.QUADS)
+		gl.TexCoord2f(0, 1)
+		gl.Vertex2f(-x, -y)
+		gl.TexCoord2f(1, 1)
+		gl.Vertex2f(x, -y)
+		gl.TexCoord2f(1, 0)
+		gl.Vertex2f(x, y)
+		gl.TexCoord2f(0, 0)
+		gl.Vertex2f(-x, y)
+		gl.End()
+
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 		window.SwapBuffers()
 	}
-}
-
-func setTexture(im *image.RGBA) {
-	size := im.Rect.Size()
-	gl.TexImage2D(
-		gl.TEXTURE_2D, 0, gl.RGBA, int32(size.X), int32(size.Y),
-		0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(im.Pix))
-}
-
-func drawBuffer(window *glfw.Window) {
-	w, h := window.GetFramebufferSize()
-	s1 := float32(w) / chip8.ScreenWidth
-	s2 := float32(h) / chip8.ScreenHeight
-	f := float32(1)
-	var x, y float32
-	if s1 >= s2 {
-		x = f * s2 / s1
-		y = f
-	} else {
-		x = f
-		y = f * s1 / s2
-	}
-	gl.Begin(gl.QUADS)
-	gl.TexCoord2f(0, 1)
-	gl.Vertex2f(-x, -y)
-	gl.TexCoord2f(1, 1)
-	gl.Vertex2f(x, -y)
-	gl.TexCoord2f(1, 0)
-	gl.Vertex2f(x, y)
-	gl.TexCoord2f(0, 0)
-	gl.Vertex2f(-x, y)
-	gl.End()
 }
 
 /*
