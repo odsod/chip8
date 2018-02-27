@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"math/rand"
 	"time"
 
 	"github.com/odsod/chip8/ui/terminal"
@@ -16,6 +17,8 @@ func main() {
 	emulatorFrequencyHz := flag.Int("emulatorFrequency", 100, "The emulator frequency (Hz)")
 	keyPressDurationMs := flag.Int("keyPressDuration", 100, "The key press duration (ms)")
 	flag.Parse()
+
+	rand.Seed(time.Now().UTC().UnixNano())
 
 	ui := terminal.NewUI(terminal.Conf{
 		RomFile:             *romFile,

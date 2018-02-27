@@ -2,9 +2,7 @@ package opengl
 
 import (
 	"image"
-	"image/color"
 	"io/ioutil"
-	"math"
 	"runtime"
 	"time"
 
@@ -22,41 +20,9 @@ type Options struct {
 }
 
 type UI struct {
-	vm     *chip8.VM
-	screen *screen
-	opts   Options
-}
-
-type screen struct {
-	pixelFadeTime time.Duration
-	pixelLastLit  [chip8.ScreenWidth][chip8.ScreenHeight]time.Time
-}
-
-func pixelColor(now, lastLit time.Time, fade time.Duration) color.RGBA {
-	timeSinceLit := now.Sub(lastLit)
-	if timeSinceLit >= fade {
-		return color.RGBA{0, 0, 0, 255}
-	}
-	lightPercent := 1 - float64(timeSinceLit)/float64(fade)
-	alpha := uint8(math.Round(lightPercent * 255))
-	return color.RGBA{alpha, alpha, alpha, 255}
-}
-
-func (d *screen) update(now time.Time, texture uint32, vm *chip8.VM, img *image.RGBA, window *glfw.Window) {
-	gl.BindTexture(gl.TEXTURE_2D, texture)
-	for y, scanLine := range vm.VideoMemory {
-		for x := 0; x < 64; x++ {
-			pixel := scanLine&(0x8000000000000000>>uint(x)) > 0
-			if pixel {
-				d.pixelLastLit[x][y] = now
-			}
-			img.SetRGBA(x, y, pixelColor(now, d.pixelLastLit[x][y], d.pixelFadeTime))
-		}
-	}
-
-	setTexture(img)
-	drawBuffer(window)
-	gl.BindTexture(gl.TEXTURE_2D, 0)
+	vm      *chip8.VM
+	display *display
+	opts    Options
 }
 
 func NewUI(opts Options) *UI {
@@ -66,9 +32,9 @@ func NewUI(opts Options) *UI {
 	}
 
 	return &UI{
-		vm:     chip8.New(rom),
-		screen: &screen{pixelFadeTime: opts.PixelFadeTime},
-		opts:   opts,
+		vm:      chip8.New(rom),
+		display: newDisplay(opts.PixelFadeTime),
+		opts:    opts,
 	}
 }
 
@@ -96,9 +62,15 @@ func (ui *UI) Run() {
 	}
 	gl.Enable(gl.TEXTURE_2D)
 
-	img := image.NewRGBA(image.Rect(0, 0, chip8.ScreenWidth, chip8.ScreenHeight))
-
-	texture := createTexture()
+	// Create texture for chip8 screen
+	var texture uint32
+	gl.GenTextures(1, &texture)
+	gl.BindTexture(gl.TEXTURE_2D, texture)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+	gl.BindTexture(gl.TEXTURE_2D, 0)
 
 	rom, err := ioutil.ReadFile("roms/TETRIS")
 	if err != nil {
@@ -128,7 +100,14 @@ func (ui *UI) Run() {
 			vm.Step()
 			cpuCycles++
 		}
-		ui.screen.update(now, texture, vm, img, window)
+
+		ui.display.update(now, vm)
+
+		gl.BindTexture(gl.TEXTURE_2D, texture)
+
+		setTexture(ui.display.buffer)
+		drawBuffer(window)
+		gl.BindTexture(gl.TEXTURE_2D, 0)
 		window.SwapBuffers()
 	}
 }
@@ -138,18 +117,6 @@ func setTexture(im *image.RGBA) {
 	gl.TexImage2D(
 		gl.TEXTURE_2D, 0, gl.RGBA, int32(size.X), int32(size.Y),
 		0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(im.Pix))
-}
-
-func createTexture() uint32 {
-	var texture uint32
-	gl.GenTextures(1, &texture)
-	gl.BindTexture(gl.TEXTURE_2D, texture)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-	gl.BindTexture(gl.TEXTURE_2D, 0)
-	return texture
 }
 
 func drawBuffer(window *glfw.Window) {

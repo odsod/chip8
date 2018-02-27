@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"math/rand"
 	"time"
 
 	"github.com/odsod/chip8/ui/opengl"
@@ -14,6 +15,8 @@ func main() {
 	scale := flag.Int("scale", 8, "The graphics upscaling coefficient")
 	pixelFadeTimeMs := flag.Int("pixelFadeTime", 90, "The pixel fade time (ms)")
 	flag.Parse()
+
+	rand.Seed(time.Now().UTC().UnixNano())
 
 	ui := opengl.NewUI(opengl.Options{
 		RomFile:          *romFile,
