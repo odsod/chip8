@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 	"io/ioutil"
+	"math"
 	"runtime"
 	"time"
 
@@ -17,6 +18,7 @@ type Options struct {
 	CPUFrequencyHz   int
 	TimerFrequencyHz int
 	Scale            int
+	PixelFadeTime    time.Duration
 }
 
 type UI struct {
@@ -30,6 +32,16 @@ type screen struct {
 	pixelLastLit  [chip8.ScreenWidth][chip8.ScreenHeight]time.Time
 }
 
+func pixelColor(now, lastLit time.Time, fade time.Duration) color.RGBA {
+	timeSinceLit := now.Sub(lastLit)
+	if timeSinceLit >= fade {
+		return color.RGBA{0, 0, 0, 255}
+	}
+	lightPercent := 1 - float64(timeSinceLit)/float64(fade)
+	alpha := uint8(math.Round(lightPercent * 255))
+	return color.RGBA{alpha, alpha, alpha, 255}
+}
+
 func (d *screen) update(now time.Time, texture uint32, vm *chip8.VM, img *image.RGBA, window *glfw.Window) {
 	gl.BindTexture(gl.TEXTURE_2D, texture)
 	for y, scanLine := range vm.VideoMemory {
@@ -37,10 +49,8 @@ func (d *screen) update(now time.Time, texture uint32, vm *chip8.VM, img *image.
 			pixel := scanLine&(0x8000000000000000>>uint(x)) > 0
 			if pixel {
 				d.pixelLastLit[x][y] = now
-				img.SetRGBA(x, y, color.RGBA{255, 255, 255, 255})
-			} else {
-				img.SetRGBA(x, y, color.RGBA{0, 0, 0, 255})
 			}
+			img.SetRGBA(x, y, pixelColor(now, d.pixelLastLit[x][y], d.pixelFadeTime))
 		}
 	}
 
@@ -57,7 +67,7 @@ func NewUI(opts Options) *UI {
 
 	return &UI{
 		vm:     chip8.New(rom),
-		screen: &screen{},
+		screen: &screen{pixelFadeTime: opts.PixelFadeTime},
 		opts:   opts,
 	}
 }
